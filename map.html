@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WaterLog Map - Manual Detour</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100%; width: 100%; }
+    #logoutBtn {
+      position: absolute; top: 10px; right: 10px; z-index: 1000;
+      background-color: #ff4d4d; color: white; border: none;
+      padding: 10px 15px; border-radius: 5px; cursor: pointer;
+    }
+    #logoutBtn:hover { background-color: #cc0000; }
+  </style>
+</head>
+<body>
+<button id="logoutBtn">Logout</button>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+
+<script>
+  // 1. Session check
+  const session = JSON.parse(localStorage.getItem("waterlog_session"));
+  if(!session){
+    window.location.href = "index.html";
+  }
+
+  // Logout button
+  document.getElementById("logoutBtn").addEventListener("click", function(){
+    localStorage.removeItem("waterlog_session");
+    window.location.href = "index.html";
+  });
+
+  // 2. Initialize map at Pumpwell
+  const map = L.map('map').setView([12.8719, 74.8423], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // 3. Flooded area polygons
+  const floodedAreas = [
+    [[12.8720, 74.8415],[12.8720, 74.8420],[12.8725, 74.8420],[12.8725, 74.8415]], // area 1
+    [[12.8726, 74.8422],[12.8726, 74.8427],[12.8730, 74.8427],[12.8730, 74.8422]]  // area 2
+  ];
+
+  floodedAreas.forEach(area => {
+    L.polygon(area, {color: 'red', fillOpacity: 0.3}).addTo(map).bindPopup("Flooded Area");
+  });
+
+  // 4. Waterlogging markers (optional)
+  const markers = [
+    {coords:[12.8722, 74.8417], severity:"High"},
+    {coords:[12.8728, 74.8424], severity:"Medium"}
+  ];
+
+  markers.forEach(loc => {
+    const color = loc.severity === "High" ? "red" : "orange";
+    L.circleMarker(loc.coords, {radius:10, fillColor:color, color:"#000", weight:1, opacity:1, fillOpacity:0.8})
+      .addTo(map).bindPopup(`Severity: ${loc.severity}`);
+  });
+
+  // 5. Delivery route avoiding flooded areas manually
+  // Start → detour → end
+  const start = [12.8719, 74.8423];  // Pumpwell
+  const detour = [12.8718, 74.8430]; // manual waypoint to avoid flooded zones
+  const end = [12.8750, 74.8500];    // delivery point
+
+  L.Routing.control({
+    waypoints: [
+      L.latLng(start[0], start[1]),
+      L.latLng(detour[0], detour[1]),
+      L.latLng(end[0], end[1])
+    ],
+    routeWhileDragging: false,
+    draggableWaypoints: false,
+    addWaypoints: false
+  }).addTo(map);
+
+</script>
+</body>
+</html>

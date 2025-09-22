@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - Water Log</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #fff7f7; }
+    h1 { color: #cc0000; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background: #cc0000; color: white; }
+    .btn { margin-top: 20px; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; }
+    .btn-logout { background: #ff4444; color: white; }
+    .error { color: red; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+
+  <script>
+    function renderAdminDashboard(session) {
+      // Load all users from storage
+      const users = JSON.parse(localStorage.getItem("waterlog_users")) || [];
+
+      let rows = users.map(u => `
+        <tr>
+          <td>${u.email}</td>
+          <td>${u.name}</td>
+          <td>${u.role}</td>
+        </tr>
+      `).join("");
+
+      document.getElementById('content').innerHTML = `
+        <h1>Welcome, ${session.name || session.email} 👑</h1>
+        <p>This is your <b>Admin Dashboard</b>. Here is a list of all users:</p>
+
+        <table>
+          <tr><th>User Email</th><th>Name</th><th>Role</th></tr>
+          ${rows}
+        </table>
+
+        <button class="btn btn-logout" onclick="logout()">Logout</button>
+      `;
+    }
+
+    function showError(msg) {
+      document.getElementById('content').innerHTML = `
+        <h2>Access Denied 🚫</h2>
+        <p class="error">${msg}</p>
+        <a href="index.html">Go to Login</a>
+      `;
+    }
+
+    // Session check
+    const sessionRaw = localStorage.getItem('waterlog_session');
+    if (!sessionRaw) {
+      showError("You are not logged in. Please log in as Admin.");
+    } else {
+      try {
+        const session = JSON.parse(sessionRaw);
+        if (session.role !== "admin") {
+          showError("This dashboard is for Admins only.");
+        } else {
+          renderAdminDashboard(session);
+        }
+      } catch (e) {
+        showError("Invalid session. Please log in again.");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('waterlog_session');
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

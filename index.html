@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WaterLog Monitor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
+
+    /* Body & Water-themed Background */
+    body{
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background: linear-gradient(to top, #2980b9, #6dd5fa);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle floating water waves */
+    body::before, body::after{
+      content:"";
+      position:absolute;
+      width:200%;
+      height:200%;
+      background: rgba(255,255,255,0.05);
+      border-radius:45%;
+      animation: wave 8s infinite linear;
+    }
+    body::after{
+      animation-delay: 4s;
+    }
+
+    @keyframes wave{
+      0% {transform: translate(-50%,0) rotate(0deg);}
+      100% {transform: translate(-50%,0) rotate(360deg);}
+    }
+
+    /* Card styling */
+    .card{
+      background: rgba(255,255,255,0.95);
+      width:380px;
+      padding:30px 25px;
+      border-radius:15px;
+      box-shadow:0 15px 30px rgba(0,0,0,0.25);
+      position: relative;
+      z-index: 1;
+    }
+
+    h2{text-align:center;color:#145a86;margin-bottom:15px;font-weight:700;}
+    .tabs{display:flex;gap:10px;margin-bottom:20px;}
+    .tab{flex:1;padding:10px;text-align:center;cursor:pointer;border-radius:8px;font-weight:700;background:#f0f0f0;transition:0.3s;}
+    .tab.active{background:#145a86;color:white;}
+    .form-section{display:none;flex-direction:column;gap:12px;}
+    .form-section.active{display:flex;}
+    label{font-size:14px;color:#555;}
+    input,select{padding:12px 15px;border-radius:8px;border:1px solid #ccc;font-size:15px;transition:0.3s;}
+    input:focus,select:focus{border-color:#145a86;box-shadow:0 0 8px rgba(20,90,134,0.3);outline:none;}
+    .btn{padding:12px;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:0.3s;}
+    .btn-login{background: linear-gradient(135deg,#6dd5fa,#2980b9);color:white;}
+    .btn-login:hover{background: linear-gradient(135deg,#2980b9,#6dd5fa);}
+    .btn-signup{background: linear-gradient(135deg,#42e695,#3bb2b8);color:white;}
+    .btn-signup:hover{background: linear-gradient(135deg,#3bb2b8,#42e695);}
+    .message{font-size:14px;color:red;text-align:center;display:none;}
+    .success{font-size:14px;color:green;text-align:center;display:none;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>WaterLog Monitor</h2>
+    <div class="tabs">
+      <div class="tab active" onclick="showSection('login')">Login</div>
+      <div class="tab" onclick="showSection('signup')">Sign Up</div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="login" class="form-section active">
+      <label>Email Address</label>
+      <input type="email" id="email" placeholder="Enter your email">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Enter your password">
+      <label>Select Role</label>
+      <select id="role">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button class="btn btn-login" onclick="login()">Login</button>
+      <p id="loginMessage" class="message"></p>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signup" class="form-section">
+      <label>Email Address</label>
+      <input type="email" id="newEmail" placeholder="Enter your email">
+      <label>Password</label>
+      <input type="password" id="newPassword" placeholder="Enter your password">
+      <label>Select Role</label>
+      <select id="newRole">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button class="btn btn-signup" onclick="createAccount()">Create Account</button>
+      <p id="signupMessage" class="success"></p>
+    </div>
+  </div>
+
+  <script>
+    function showSection(section){
+      document.getElementById('login').classList.remove('active');
+      document.getElementById('signup').classList.remove('active');
+      document.getElementById(section).classList.add('active');
+
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(t=>t.classList.remove('active'));
+      event.target.classList.add('active');
+
+      document.getElementById('loginMessage').style.display='none';
+      document.getElementById('signupMessage').style.display='none';
+    }
+
+    function getUsers(){ return JSON.parse(localStorage.getItem("users")) || []; }
+    function saveUsers(users){ localStorage.setItem("users", JSON.stringify(users)); }
+
+    function createAccount(){
+      const email = document.getElementById("newEmail").value.trim();
+      const password = document.getElementById("newPassword").value.trim();
+      const role = document.getElementById("newRole").value;
+
+      if(!email || !password){
+        alert("Please fill all fields");
+        return;
+      }
+
+      let users = getUsers();
+      if(users.find(u=>u.email===email)){
+        alert("Account already exists!");
+        return;
+      }
+
+      users.push({email,password,role});
+      saveUsers(users);
+
+      const msg = document.getElementById("signupMessage");
+      msg.textContent = "Account created successfully! Please login.";
+      msg.style.display="block";
+
+      document.getElementById("newEmail").value='';
+      document.getElementById("newPassword").value='';
+      document.getElementById("newRole").value='user';
+
+      setTimeout(()=>showSection('login'),1500);
+    }
+
+    function login(){
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const role = document.getElementById("role").value;
+
+      if(!email || !password){
+        document.getElementById("loginMessage").textContent="Please fill all fields";
+        document.getElementById("loginMessage").style.display="block";
+        return;
+      }
+
+      const users = getUsers();
+      const user = users.find(u=>u.email===email && u.password===password && u.role===role);
+
+      if(user){
+        localStorage.setItem("waterlog_session", JSON.stringify(user));
+
+        // ---- Set your redirect page here ----
+        const redirectPath = "map.html"; // <-- CHANGE this to your page path
+        window.location.href = redirectPath;
+
+      }else{
+        document.getElementById("loginMessage").textContent="Invalid email or password";
+        document.getElementById("loginMessage").style.display="block";
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard - Water Log</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f7faff; }
+    h1 { color: #0077cc; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background: #0077cc; color: white; }
+    .btn { margin-top: 20px; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; }
+    .btn-logout { background: #ff4444; color: white; }
+    .error { color: red; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+
+  <script>
+    function renderUserDashboard(session) {
+      document.getElementById('content').innerHTML = `
+        <h1>Welcome, ${session.name || session.email} 👋</h1>
+        <p>This is your <b>User Dashboard</b>. Here are your sample water log entries:</p>
+
+        <table>
+          <tr><th>Date</th><th>Amount (Liters)</th><th>Time</th></tr>
+          <tr><td>2025-09-20</td><td>2.0</td><td>08:30 AM</td></tr>
+          <tr><td>2025-09-21</td><td>1.5</td><td>12:15 PM</td></tr>
+          <tr><td>2025-09-22</td><td>2.2</td><td>07:45 AM</td></tr>
+        </table>
+
+        <button class="btn btn-logout" onclick="logout()">Logout</button>
+      `;
+    }
+
+    function showError(msg) {
+      document.getElementById('content').innerHTML = `
+        <h2>Access Denied 🚫</h2>
+        <p class="error">${msg}</p>
+        <a href="index.html">Go to Login</a>
+      `;
+    }
+
+    // Session check
+    const sessionRaw = localStorage.getItem('waterlog_session');
+    if (!sessionRaw) {
+      showError("You are not logged in. Please log in as User.");
+    } else {
+      try {
+        const session = JSON.parse(sessionRaw);
+        if (session.role !== "user") {
+          showError("This dashboard is for Users only.");
+        } else {
+          renderUserDashboard(session);
+        }
+      } catch (e) {
+        showError("Invalid session. Please log in again.");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('waterlog_session');
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
